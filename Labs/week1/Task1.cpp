@@ -1,29 +1,53 @@
 #include <iostream>
 #include <lodepng.h>
+#include <vector>
+#include <cmath>
+
+const int width = 1920, height = 1080;
+const int nChannels = 4;
+std::vector<uint8_t> imageBuffer(height* width* nChannels);
+
+void setPixel(std::vector<uint8_t>& imageBuffer, int width, int height, int x, int y, uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
+	int pixelIdx = x + y * width;
+	imageBuffer[pixelIdx * nChannels + 0] = r;
+	imageBuffer[pixelIdx * nChannels + 1] = g;
+	imageBuffer[pixelIdx * nChannels + 2] = b;
+	imageBuffer[pixelIdx * nChannels + 3] = a;
+}
+
+void setCircle(std::vector<uint8_t>& imageBuffer, int width, int height, int x, int y, uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
+	for (int j = 0; j < height; ++j)
+		for (int i = 0; i < width; ++i){
+			if (sqrt(pow(i - x,2) + pow(j - y, 2)) < 300) {
+				int pixelIdx = i + j * width;
+				imageBuffer[pixelIdx * nChannels + 0] = r; // Set red pixel values to 0
+				imageBuffer[pixelIdx * nChannels + 1] = g; // Set green pixel values to 255 (full brightness)
+				imageBuffer[pixelIdx * nChannels + 2] = b; // Set blue pixel values to 255 (full brightness)
+				imageBuffer[pixelIdx * nChannels + 3] = a; // Set alpha (transparency) pixel values to 255 (fully opaque)
+			}
+		}
+}
 
 
 int main()
-{
+{	
 	std::string outputFilename = "output.png";
 
-	const int width = 1920, height = 1080;
-	const int nChannels = 4;
-
-	// Setting up an image buffer
-	// This std::vector has one 8-bit value for each pixel in each row and column of the image, and
-	// for each of the 4 channels (red, green, blue and alpha).
-	// Remember 8-bit unsigned values can range from 0 to 255.
-	std::vector<uint8_t> imageBuffer(height*width*nChannels);
+	
 
 	// This for loop sets all the pixels of the image to a cyan colour. 
-	for(int y = 0; y < height; ++y) 
+	for (int y = 0; y < height; ++y)
 		for (int x = 0; x < width; ++x) {
 			int pixelIdx = x + y * width;
-			imageBuffer[pixelIdx * nChannels + 0] = 0; // Set red pixel values to 0
+			imageBuffer[pixelIdx * nChannels + 0] = 255; // Set red pixel values to 0
 			imageBuffer[pixelIdx * nChannels + 1] = 255; // Set green pixel values to 255 (full brightness)
 			imageBuffer[pixelIdx * nChannels + 2] = 255; // Set blue pixel values to 255 (full brightness)
 			imageBuffer[pixelIdx * nChannels + 3] = 255; // Set alpha (transparency) pixel values to 255 (fully opaque)
 		}
+	setCircle(imageBuffer, width, height, width/2, height/2, 255, 0, 0, 255);
+	
+
+
 
 	/// *** Lab Tasks ***
 	// * Task 1: Try adapting the code above to set the lower half of the image to be a green colour.
