@@ -26,28 +26,45 @@ void drawLine(std::vector<uint8_t>& image, int width, int height, int startX, in
 	// *** YOUR CODE HERE
 	//Step 1: work out the gradient
 	float gradient;
-
+	gradient = float(endY - startY) / float(endX - startX);
 	// Step 2: check if it's steep (i.e. absolute value bigger than 1;)
 	bool steep;
+	if (gradient > 1.0f) {
+		steep = true;
+	}
+	else {
+		steep = false;
+	}
 
 	if (steep) {
 		// Step 3: The steep version of the code, iterating over Y
 		// First, make sure that startY is less than endY. 
 		// If they're in the wrong order, swap both X and Y.
-
+		if (startY > endY) {
+			std::swap(startY, endY);
+			std::swap(startX, endX);
+		}
 		// Now, iterate from startY to endY. 
 		for (int y = startY; y <= endY; ++y) {
 			// Draw the line, following the formula!
+			int x = startX + (y - startY) / gradient;
+			setPixel(image, x, y, width, height, 255, 255, 255);
+
 		}
 	}
 	else {
 		// Step 4: The shallow version of the code, iterating over X
 		// First, make sure that startx is less than endX. 
 		// If they're in the wrong order, swap both X and Y.
-
+		if (startX > endX) {
+			std::swap(startY, endY);
+			std::swap(startX, endX);
+		}
 		// Now, iterate from startY to endY. 
 		for (int x = startX; x <= endX; ++x) {
 			// Draw the line, following the formula!
+			int y = startY + gradient * (x - startX);
+			setPixel(image, x, y, width, height, 255, 255, 255);
 		}
 	}
 }
@@ -101,6 +118,11 @@ int main()
 
 			std::vector<unsigned int> face;
 			// *** YOUR CODE HERE ***
+			unsigned int idx, idxTex, idxNorm;
+			while (lineSS >> idx >> ignoreChar >> idxTex >> ignoreChar >> idxNorm) {
+				face.push_back(idx - 1);
+			}
+			if (face.size() > 0) faces.push_back(face);
 			// This time we care about faces!
 			// Load this face from the line, pushing it back into the list of faces.
 			// Be careful to ignore the "/" characters, and the extra texture and normal indices.
@@ -110,7 +132,15 @@ int main()
 	for (int f = 0; f < faces.size(); ++f) {
 		// **** Task 3 ****
 		// Finally, let's draw the faces!
-
+		int x0 = vertices[faces[f][0]][0] * 250 + width / 2;
+		int y0 = -vertices[faces[f][0]][1] * 250 + height / 2;
+		int x1 = vertices[faces[f][1]][0] * 250 + width / 2;
+		int y1 = -vertices[faces[f][1]][1] * 250 + height / 2;
+		int x2 = vertices[faces[f][2]][0] * 250 + width / 2;
+		int y2 = -vertices[faces[f][2]][1] * 250 + height / 2;
+		drawLine(imageBuffer, width, height, x0, y0, x1, y1);
+		drawLine(imageBuffer, width, height, x1, y1, x2, y2);
+		drawLine(imageBuffer, width, height, x2, y2, x0, y0);
 		// First, load the vertices, and resize them like we did in Task1.cpp
 		// Then, call DrawLine three times, to draw each side of the triangle!
 	}

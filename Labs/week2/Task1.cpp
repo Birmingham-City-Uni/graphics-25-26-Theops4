@@ -64,7 +64,32 @@ int main()
 	{
 		std::getline(bunnyFile, line);
 		// *** YOUR CODE HERE ***
+		if (line[0] == 'v' && line[1] == ' ') {
+			Vector3 vertex;
+			for (int i = 2; i < line.size(); i++) {
+				std::string number;
+				while (line[i] != ' ' && i < line.size()) {
+					number += line[i];
+					i++;
+				}
+				if (vertex.x() == 0.0f) {
+					vertex.x() = std::stof(number);
+				}
+				else if (vertex.y() == 0.0f) {
+					vertex.y() = std::stof(number);
+				}
+				else if (vertex.z() == 0.0f) {
+					vertex.z() = std::stof(number);
+				}
+			}
+			vertices.push_back(vertex);
+			std::cout << vertex << std::endl;
+		}
+		
 
+			
+			
+		
 		// Process each line of the file
 		// Load it into a new Vector3, if the line starts with a V
 		// Push this back into the std::vector of vertices
@@ -83,6 +108,9 @@ int main()
 		//         big enough to see.
 
 		// *** YOUR CODE HERE ***
+		int x = v[0] * 200 + width / 2;
+		int y = -v[1] * 200 + height / 2;
+		setPixel(imageBuffer, x, y, width, height, 255, 255, 255);
 	}
 
 
