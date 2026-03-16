@@ -128,6 +128,7 @@ void drawTriangle(std::vector<uint8_t>& image, int width, int height,
 				continue;
 			}
 			zBuffer[depthIdx] = depth;
+
 			// *** END YOUR CODE ***
 
 			Eigen::Vector3f normP = t.norms[0] * b0 + t.norms[1] * b1 + t.norms[2] * b2;
@@ -184,7 +185,7 @@ void drawTriangle(std::vector<uint8_t>& image, int width, int height,
 			for (auto& light : lights) {
 
 				// Work out the contribution from this light source, and add it to the color variable.
-
+				
 				// Work out the intensity of this light source, at the point worldP.
 				Eigen::Vector3f lightIntensity = light->getIntensityAt(worldP);
 
@@ -279,6 +280,7 @@ void drawMesh(std::vector<unsigned char>& image,
 		t.screen[1] = Eigen::Vector3f(width * (vClip1.x() + 1.0f) / 2.0f, height * (1.0f - (vClip1.y() + 1.0f) / 2.0f), vClip1.z());
 		t.screen[2] = Eigen::Vector3f(width * (vClip2.x() + 1.0f) / 2.0f, height * (1.0f - (vClip2.y() + 1.0f) / 2.0f), vClip2.z());
 		// *** END YOUR CODE ***
+
 
 		// transform the normals (using the inverse transpose of the upper 3x3 block)
 		t.norms[0] = (modelToWorld.block<3, 3>(0, 0).inverse().transpose() * n0).normalized();
