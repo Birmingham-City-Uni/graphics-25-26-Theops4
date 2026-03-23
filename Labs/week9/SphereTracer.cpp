@@ -87,7 +87,28 @@ bool raySphereIntersection(const Ray& ray, const Sphere& sphere, Vector3f& inter
 	//   b. If no such t exists, return false.
 
 	// Remove this existing code, that just always returns false.
+	float A = 1;
+	float B = 2* (ray.origin - sphere.centre).dot(ray.direction);
+	float C = (ray.origin - sphere.centre).squaredNorm() - sphere.radius * sphere.radius;
+
+	float discriminant = B * B - 4 * A * C;
+	if (discriminant < 0) return false;
+
+	float sqrtDiscriminant = sqrt(discriminant);
+	float t1 = (-B - sqrtDiscriminant) / (2 * A);
+	float t2 = (-B + sqrtDiscriminant) / (2 * A);
+
+	if (t1 > minT) {
+		t = t1;
+		intersection = ray.origin + t * ray.direction;
+		return true;
+	} else if (t2 > minT) {
+		t = t2;
+		intersection = ray.origin + t * ray.direction;
+		return true;
+	}
 	return false;
+
 	// *** END YOUR CODE ***
 } 
 
@@ -99,7 +120,7 @@ Vector3f getSphereNormal(const Sphere& sphere, const Vector3f& location) {
 	// See the slides for more detail.
 	// 
 	// Remove this existing code that just returns 0.
-	return Vector3f::Zero();
+	return (location - sphere.centre).normalized();
 	// *** END YOUR CODE ***
 }
 
@@ -222,9 +243,18 @@ Vector3f traceRay(const Ray& ray, const std::vector<Sphere>& spheres, const std:
 
 		// This existing code throws an error as mirror spheres haven't been implemented yet.
 		// Remove it when you've implemented mirrors!
-		throw std::runtime_error("Mirror material not implemented!");
+		Vector3f normal = getSphereNormal(*hitSphere, hitIntersection);
+		Vector3f reflectedDir = reflect(ray.direction, normal);
+
+		Ray reflectedRay;
+		reflectedRay.origin = hitIntersection;
+		reflectedRay.direction = reflectedDir.normalized();
+
+		return traceRay(reflectedRay, spheres, lights, bounce + 1);
+	
 		//*** END YOUR CODE
 	}
+
 	else if (hitSphere->material == Material::REFRACTIVE) {
 		// I've handled a few fiddly bits of the refraction code for you here:
 		float eta; // This is n1/n2, the ratio of IORs.
@@ -300,7 +330,7 @@ int main()
 	spheres.push_back({ Vector3f(0.f, -2.f, 4.f), 0.5f, Material::DIFFUSE, Vector3f(0.2f, 0.2f, 0.8f) });
 	spheres.push_back({ Vector3f(0.f, 1.f, 6.f), 0.3f, Material::DIFFUSE, Vector3f(0.8f, 0.8f, 0.f) });
 	// Task 5: Add a mirror reflective sphere to your scene, and raytrace again!
-	//spheres.push_back({ Vector3f(2.f, 2.f, 4.f), 0.5f, Material::MIRROR, Vector3f(0.9f, 0.9f, 0.9f) });
+	spheres.push_back({ Vector3f(2.f, 2.f, 4.f), 0.5f, Material::MIRROR, Vector3f(0.9f, 0.9f, 0.9f) });
 	// Task 7: Add a refractive sphere to your scene, and raytrace again!
 	//spheres.push_back({ Vector3f(0.f, 0.f, 3.f), 0.5f, Material::REFRACTIVE, Vector3f(0.9f, 0.8f, 0.8f), 1.4f });
 
