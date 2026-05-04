@@ -18,7 +18,9 @@ private:
 	std::vector<Eigen::Vector2f> vts_; // Texture coordinates
 	std::vector<std::vector<VertexIndices>> faces_;  // Face indices of the vertices
 public:
-	Model(const char *filename);
+
+	std::vector<std::vector<std::vector<VertexIndices>>> meshes; // Vector of meshes
+	Model(const char* filename);
 	~Model();
 	int nverts() const;
 	int nfaces() const;

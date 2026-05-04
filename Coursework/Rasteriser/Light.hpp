@@ -1,4 +1,5 @@
 #pragma once
+#include <cmath>
 #include <Eigen/Dense>
 #include <vector>
 #include <fstream>
@@ -178,9 +179,11 @@ public:
 		if (surfaceDir.dot(_direction) < _cosAngle) {
 			return Eigen::Vector3f::Zero();
 		}
+		//added softness to the edge of the spotlight, so that it doesn't drop off so suddenly 
+		float softness = std::pow((surfaceDir.dot(_direction) - _cosAngle) / (1.0f - _cosAngle), 2.0f);
 
 		float distance = (_location - surfaceLocation).norm();
-		return _intensity / (distance * distance);
+		return (_intensity * softness) / (distance * distance);
 	}
 
 	virtual Type getType() override

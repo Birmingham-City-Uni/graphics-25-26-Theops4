@@ -19,7 +19,7 @@ struct Triangle {
 };
 
 
-Eigen::Matrix4f projectionMatrix(int height, int width, float horzFov = 70.f * M_PI / 180.f, float zFar = 10.f, float zNear = 0.1f)
+Eigen::Matrix4f projectionMatrix(int height, int width, float horzFov = 70.f * M_PI / 180.f, float zFar = 100.f, float zNear = 0.01f)
 {
 	float vertFov = horzFov * float(height) / width;
 	Eigen::Matrix4f projection;
@@ -51,9 +51,11 @@ void drawTriangle(std::vector<uint8_t>& image, int width, int height,
 	std::vector<float>& zBuffer,
 	const Triangle& t,
 	const std::vector<std::unique_ptr<Light>>& lights,
+	const std::vector<uint8_t>& albedoTexture, int texWidth, int texHeight,
 	const Eigen::Vector3f& albedo, const Eigen::Vector3f& specularColor,
 	float specularExponent,
 	const Eigen::Vector3f& camWorldPos)
+
 {
 	int minX, minY, maxX, maxY;
 	findScreenBoundingBox(t, width, height, minX, minY, maxX, maxY);
@@ -96,6 +98,31 @@ void drawTriangle(std::vector<uint8_t>& image, int width, int height,
 
 			Eigen::Vector3f normP = t.norms[0] * b0 + t.norms[1] * b1 + t.norms[2] * b2;
 			normP.normalize();
+
+			//Texturing 
+
+			Eigen::Vector2f texP = t.texs[0] * b0 + t.texs[1] * b1 + t.texs[2] * b2;
+
+			int texR = static_cast<int>((1.0f - texP.y()) * texHeight);
+			int texC = static_cast<int>(texP.x() * texWidth);
+
+			texR = texR % texHeight;
+			texC = texC % texWidth;
+			if (texR < 0) {
+				texR += texHeight;
+			}
+			if (texC < 0) {
+				texC += texWidth;
+			}
+
+			Color texColor = getPixel(albedoTexture, texC, texR, texWidth, texHeight);
+
+			
+			Eigen::Vector3f albedo = Eigen::Vector3f(
+				powf(texColor.r / 255.0f, 2.2f),
+				powf(texColor.g / 255.0f, 2.2f),
+				powf(texColor.b / 255.0f, 2.2f)
+			);
 
 			// Work out colour at this position.
 			Eigen::Vector3f color = Eigen::Vector3f::Zero();
@@ -162,6 +189,7 @@ void drawMesh(std::vector<unsigned char>& image,
 	const Mesh& mesh,
 	const Eigen::Vector3f& albedo, const Eigen::Vector3f& specularColor,
 	float specularExponent,
+	const std::vector<uint8_t>& albedoTexture, int texWidth, int texHeight,
 	const Eigen::Vector3f& camWorldPos,
 	const Eigen::Matrix4f& modelToWorld,
 	const Eigen::Matrix4f& worldToClip,
@@ -210,7 +238,7 @@ void drawMesh(std::vector<unsigned char>& image,
 		t.texs[1] = mesh.texs[mesh.tFaces[i][1]];
 		t.texs[2] = mesh.texs[mesh.tFaces[i][2]];
 
-		drawTriangle(image, width, height, zBuffer, t, lights, albedo, specularColor, specularExponent, camWorldPos);
+		drawTriangle(image, width, height, zBuffer, t, lights, albedoTexture, texWidth, texHeight, albedo, specularColor, specularExponent, camWorldPos);
 	}
 }
 
@@ -238,10 +266,14 @@ int main()
 		}
 	}
 
-	Eigen::Matrix4f projection = projectionMatrix(height, width);
+	//Eigen::Matrix4f projection = projectionMatrix(height, width, 60.f * M_PI / 180.f);
 
+	//// This matrix rotates the camera, tilting it down, then translates it up to make it look down on the scene.
+	//Eigen::Matrix4f cameraToWorld = translationMatrix(Eigen::Vector3f(-0.45f, 1.8f, 0.5f)) * rotateXMatrix(0.4f) * rotateYMatrix(0.2f) * rotateZMatrix(-0.06f);
+
+	Eigen::Matrix4f projection = projectionMatrix(height, width, 27.f * M_PI / 180.f);
 	// This matrix rotates the camera, tilting it down, then translates it up to make it look down on the scene.
-	Eigen::Matrix4f cameraToWorld = translationMatrix(Eigen::Vector3f(0.f, 0.8f, -1.f)) * rotateXMatrix(0.4f);
+	Eigen::Matrix4f cameraToWorld = translationMatrix(Eigen::Vector3f(-0.45f, 1.38f, -2.5f)) * rotateXMatrix(0.25f) * rotateYMatrix(0.2f) * rotateZMatrix(-0.06f);
 
 	Eigen::Vector3f camWorldPos = (cameraToWorld * Eigen::Vector4f(0, 0, 0, 1)).block<3, 1>(0, 0);
 
@@ -253,32 +285,62 @@ int main()
 
 	
 
-	std::string combineFilename = "../models/combine.obj";
-	std::string planeFilename = "../models/plane.obj";
+	std::string combineFilename = "../models/GameScene12.obj";
+	/*std::string planeFilename = "../models/plane.obj";*/
 
 	// You can modify the lighting setup here....
 	std::vector<std::unique_ptr<Light>> lights;
-	lights.emplace_back(new AmbientLight(Eigen::Vector3f(0.1f, 0.1f, 0.1f)));
-	lights.emplace_back(new DirectionalLight(Eigen::Vector3f(0.4f, 0.4f, 0.4f), Eigen::Vector3f(1.f, -1.f, 0.0f)));
+	lights.emplace_back(new AmbientLight(Eigen::Vector3f(0.549f, 0.824f, 0.675f) / 30.f));
+	lights.emplace_back(new PointLight(Eigen::Vector3f(3.49f, 7.24f, 5.75f), Eigen::Vector3f(5.f, 1.f, -5.f)));
+	/*lights.emplace_back(new DirectionalLight(Eigen::Vector3f(0.1f, 0.1f, 0.1f), Eigen::Vector3f(5.f, -10.f, 5.f)));*/
+	lights.emplace_back(new SpotLight(Eigen::Vector3f(3.49f, 7.24f, 5.75f) * 5.f, Eigen::Vector3f(0.3f, 1.8f, 5.5f), Eigen::Vector3f(-2.2f, -2.2f, -2.f).normalized(), 1.f));
+	std::vector<Mesh> combineMeshes = loadMeshFile(combineFilename);
+	/*Mesh planeMesh = loadMeshFile(planeFilename);*/
 
-	Mesh combineMesh = loadMeshFile(combineFilename);
-	Mesh planeMesh = loadMeshFile(planeFilename);
 
+	Eigen::Matrix4f sceneTransform;
+	sceneTransform = translationMatrix(Eigen::Vector3f(0.f, 0.0f, 3.f)) * scaleMatrix(0.01f);
+	
 
-	Eigen::Matrix4f bunnyTransform;
-	bunnyTransform = translationMatrix(Eigen::Vector3f(0.0f, -1.0f, 3.f)) * rotateYMatrix(M_PI) * scaleMatrix(0.02f);
-	drawMesh(imageBuffer, zBuffer, combineMesh, Eigen::Vector3f(27/255.f, 39/255.f, 26/255.f),
-		Eigen::Vector3f::Ones() * 1.0f, 10.f, camWorldPos,
-		bunnyTransform, worldToClip, lights, width, height);
+	// A small helper struct to hold texture details
+	struct TextureData {
+		std::vector<uint8_t> data;
+		unsigned int width = 0;
+		unsigned int height = 0;
+	};
 
-	Eigen::Matrix4f planeTransform;
-	planeTransform = translationMatrix(Eigen::Vector3f(0.0f, -1.0f, 3.f)) * scaleMatrix(1.4f);
-	drawMesh(imageBuffer, zBuffer, planeMesh, Eigen::Vector3f(0.f, 0.5f, 0.8f),
-		Eigen::Vector3f::Ones() * 1.0f, 10.f, camWorldPos,
-		planeTransform, worldToClip, lights, width, height);
+	//List of Texture Filenames corresponding to the order of meshes in the obj
+	std::vector<std::string> textureFiles = {
+		"../models/Pulse_Rifle_Tex.png", 
+		"../models/Pulse_Rifle_Tex.png",
+		"../models/Bars_Tex.png",
+		"../models/Bars_Tex.png",
+		"../models/Wall_Tex.png",
+		"../models/Wall_Tex.png",
+		"../models/Floor_Tex.png",
+		"../models/Dark_Wall_Tex.png",
+		"../models/Floor_Tex.png",
+		"../models/Soldier_Tex.png",
+		"../models/Soldier_Tex.png"
+	};
 
-	// For debug - draw point lights as colored circles so we can see where they are
-	drawPointLights(imageBuffer, width, height, lights);
+	//Load the textures into a vector
+	std::vector<TextureData> textures;
+	for (const auto& file : textureFiles) {
+		TextureData tex;
+		lodepng::decode(tex.data, tex.width, tex.height, file);
+		textures.push_back(tex);
+	}
+
+	//Iterate through meshes 
+	for (size_t i = 0; i < combineMeshes.size(); ++i) {
+		const Mesh& mesh = combineMeshes[i];
+		const TextureData& tex = textures[i];
+
+		drawMesh(imageBuffer, zBuffer, mesh, Eigen::Vector3f(0.5f, 0.5f, 0.5f),
+			Eigen::Vector3f(0.549f, 0.824f, 0.675f), 500.f, tex.data, tex.width, tex.height, camWorldPos,
+			sceneTransform, worldToClip, lights, width, height);
+	}
 
 	// Save the image to png.
 	int errorCode;

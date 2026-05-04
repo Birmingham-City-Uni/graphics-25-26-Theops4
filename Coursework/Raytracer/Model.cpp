@@ -10,11 +10,20 @@ Model::Model(const char *filename) : verts_(), faces_(), vts_() {
     in.open (filename, std::ifstream::in);
     if (in.fail()) throw std::runtime_error("Couldn't open input model file!");
     std::string line;
+    std::vector<std::vector<VertexIndices>> currentMeshFaces;
     while (!in.eof()) {
         std::getline(in, line);
         std::istringstream iss(line.c_str());
         char trash;
-        if (!line.compare(0, 2, "v ")) {       // read 2 characters and check the line starts with "v"
+
+        if (!line.compare(0, 2, "o ")) { // Object separation found
+            // Push active faces into the mesh list, and start a new clean list
+            if (!currentMeshFaces.empty()) {
+                meshes.push_back(currentMeshFaces);
+                currentMeshFaces.clear();
+            }
+        }
+        else if (!line.compare(0, 2, "v ")) {       // read 2 characters and check the line starts with "v"
             iss >> trash;
             Eigen::Vector3f v;
             for (int i=0;i<3;i++) iss >> v[i];
@@ -47,7 +56,11 @@ Model::Model(const char *filename) : verts_(), faces_(), vts_() {
                 f.push_back(idx);
             }
             faces_.push_back(f);
+			currentMeshFaces.push_back(f);
         }
+    }
+    if (!currentMeshFaces.empty()) {
+        meshes.push_back(currentMeshFaces);
     }
     std::cerr << "# v# " << verts_.size() << " f# "  << faces_.size() << std::endl;
 }

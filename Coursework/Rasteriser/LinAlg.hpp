@@ -67,6 +67,17 @@ Eigen::Matrix4f rotateYMatrix(float theta)
 	return output;
 }
 
+Eigen::Matrix4f rotateZMatrix(float theta)
+{
+	Eigen::Matrix4f output;
+	output <<
+		cosf(theta), -sinf(theta), 0.f, 0.f,
+		sinf(theta), cosf(theta), 0.f, 0.f,
+		0.f, 0.f, 1.f, 0.f,
+		0.f, 0.f, 0.f, 1.f;
+	return output;
+}
+
 template<typename T> T coeffWiseMultiply(const T& l, const T& r)
 {
 	return (l.array() * r.array()).matrix();
@@ -75,11 +86,11 @@ template<typename T> T coeffWiseMultiply(const T& l, const T& r)
 bool outsideClipBox(const Eigen::Vector4f& v)
 {
 	return
-		v.x() < -1.f ||
-		v.y() < -1.f ||
+		v.x() < -2.f ||
+		v.y() < -2.f ||
 		v.z() < -1.f ||
-		v.x() > 1.f ||
-		v.y() > 1.f ||
+		v.x() > 2.f ||
+		v.y() > 2.f ||
 		v.z() > 1.f;
 }
 

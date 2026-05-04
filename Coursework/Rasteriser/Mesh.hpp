@@ -13,9 +13,15 @@ struct Mesh {
 };
 
 
-Mesh loadMeshFile(const std::string& filename)
+std::vector<Mesh> loadMeshFile(const std::string& filename)
 {
+	std::vector<Mesh> meshes;
 	Mesh mesh;
+
+	std::vector<Eigen::Vector3f> globalverts;
+	std::vector<Eigen::Vector3f> globalnorms;
+	std::vector<Eigen::Vector2f> globaltexs;
+
 
 	std::ifstream file(filename);
 
@@ -29,23 +35,35 @@ Mesh loadMeshFile(const std::string& filename)
 		char lineStart;
 		lineSS >> lineStart;
 		char ignoreChar;
+
+		if (lineStart == 'o') {
+			if (!mesh.vFaces.empty()) {
+				mesh.verts = globalverts;
+				mesh.norms = globalnorms;
+				mesh.texs = globaltexs;
+
+				meshes.push_back(mesh);
+				mesh = Mesh();
+			}
+		}
+
 		if (lineStart == 'v') {
 			if (line[1] == ' ') {
 				Eigen::Vector3f v;
 				for (int i = 0; i < 3; ++i) lineSS >> v[i];
-				mesh.verts.push_back(v);
+				globalverts.push_back(v);
 			}
 			else if (line[1] == 'n') {
 				lineSS >> ignoreChar;
 				Eigen::Vector3f n;
 				for (int i = 0; i < 3; ++i) lineSS >> n[i];
-				mesh.norms.push_back(n);
+				globalnorms.push_back(n);
 			}
 			else if (line[1] == 't') {
 				lineSS >> ignoreChar;
 				Eigen::Vector2f t;
 				for (int i = 0; i < 2; ++i) lineSS >> t[i];
-				mesh.texs.push_back(t);
+				globaltexs.push_back(t);
 			}
 
 		}
@@ -68,6 +86,13 @@ Mesh loadMeshFile(const std::string& filename)
 		}
 	}
 
-	return mesh;
+	if (!mesh.vFaces.empty()) {
+		mesh.verts = globalverts;
+		mesh.norms = globalnorms;
+		mesh.texs = globaltexs;
+		meshes.push_back(mesh);
+	}
+
+	return meshes;
 }
 

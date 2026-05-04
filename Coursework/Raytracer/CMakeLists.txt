@@ -22,6 +22,7 @@ set(LIGHTS_SOURCE_GROUP
     Light.hpp
     PointLight.hpp
     DirectionalLight.hpp
+    SpotLight.hpp
 )
 
 set(SHADERS_SOURCE_GROUP

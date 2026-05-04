@@ -7,12 +7,14 @@
 class PhongShader : public Shader
 {
 private:
-	Eigen::Vector3f albedo_, specular_;
+	const std::vector<uint8_t>* albedoTexture_;
+	const int texWidth_, texHeight_;
+	Eigen::Vector3f specular_;
 	float shininess_;
 	bool shadowTest_;
 public:
-	PhongShader(const Eigen::Vector3f& albedo, const Eigen::Vector3f& specular, float shininess, bool shadowTest=true)
-		:albedo_(albedo), specular_(specular), shininess_(shininess), shadowTest_(shadowTest)
+	PhongShader(const std::vector<uint8_t>* albedoTexture, int texWidth, int texHeight, const Eigen::Vector3f& specular, float shininess, bool shadowTest=true)
+		:albedoTexture_(albedoTexture), texWidth_(texWidth), texHeight_(texHeight),	specular_(specular), shininess_(shininess), shadowTest_(shadowTest)
 	{}
 
 	virtual Eigen::Vector3f getColor(const HitInfo& hitInfo, 
@@ -22,8 +24,22 @@ public:
 		int currBounceCount,
 		const int maxBounces) const
 	{
-		Eigen::Vector3f color = coefftWiseMul(albedo_, ambientLight);
+		Eigen::Vector3f albedo;
+		Eigen::Vector2f tex = hitInfo.texCoords;
+		int pixX = static_cast<int>(tex.x() * texWidth_);
+		int pixY = static_cast<int>((1.f - tex.y()) * texHeight_);
+		pixX = pixX % texWidth_;
+		pixY = pixY % texHeight_;
+		if (pixX < 0) pixX += texWidth_;
+		if (pixY < 0) pixY += texHeight_;
 
+		albedo.x() = static_cast<float>((*albedoTexture_)[(pixX + texWidth_ * pixY) * 4 + 0]) / 255.f;
+		albedo.y() = static_cast<float>((*albedoTexture_)[(pixX + texWidth_ * pixY) * 4 + 1]) / 255.f;
+		albedo.z() = static_cast<float>((*albedoTexture_)[(pixX + texWidth_ * pixY) * 4 + 2]) / 255.f;
+
+
+		Eigen::Vector3f color = coefftWiseMul(albedo, ambientLight);
+		
 		for (auto& light : lights) {
 			if (shadowTest_) {
 				if (!light->visibilityCheck(hitInfo.location, scene))
@@ -31,7 +47,7 @@ public:
 			}
 			Eigen::Vector3f lightVec = light->getVecToLight(hitInfo.location);
 			float dotProd = std::max(lightVec.dot(hitInfo.normal), 0.f);
-			color += dotProd * coefftWiseMul(light->getIntensity(hitInfo.location), albedo_);
+			color += dotProd * coefftWiseMul(light->getIntensity(hitInfo.location), albedo);
 
 			Eigen::Vector3f reflectVec = reflect(hitInfo.inDirection, hitInfo.normal);
 			float dotSpec = std::max(lightVec.dot(reflectVec), 0.f); 
