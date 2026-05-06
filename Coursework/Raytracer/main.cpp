@@ -125,13 +125,13 @@ int main(int argc, char* argv[]) {
 	}
 	
 	// *** Add lights to scene ***
-	Eigen::Vector3f ambientLight = Eigen::Vector3f(0.2f, 0.2f, 0.2f);
+	Eigen::Vector3f ambientLight = Eigen::Vector3f(0.29f, 0.3f, 0.3f);
 
 	std::vector<std::unique_ptr<Light>> lightSources;
 	/*lightSources.push_back(std::make_unique<DirectionalLight>(Eigen::Vector3f(0.f, -1.f, 1.f), .5f * Eigen::Vector3f(1.f, 1.f, 1.f)));*/
 	/*lightSources.push_back(std::make_unique<SpotLight>( Eigen::Vector3f(1.f, 3.f, 5.f), Eigen::Vector3f(30.f, 30.f, 30.f) ,Eigen::Vector3f(0.f, -1.f, 0.f), 0.785f));*/
-	lightSources.push_back(std::make_unique<SpotLight>( Eigen::Vector3f(1.f, 9.f, 11.f), Eigen::Vector3f(3.49f, 6.24f, 5.75f) * 90.f, Eigen::Vector3f(-2.2f, -1.f, -2.2f).normalized(), 1.5f));
-	lightSources.push_back(std::make_unique<PointLight>(Eigen::Vector3f(8.f, 0.f, -20.f), Eigen::Vector3f(3.49f, 7.24f, 5.55f) * 3.f));
+	lightSources.push_back(std::make_unique<SpotLight>( Eigen::Vector3f(1.f, 9.f, 11.f), Eigen::Vector3f(4.49f, 6.75f, 5.75f) * 90.f, Eigen::Vector3f(-2.2f, -1.f, -2.2f).normalized(), 1.5f));
+	lightSources.push_back(std::make_unique<PointLight>(Eigen::Vector3f(8.f, 0.f, -20.f), Eigen::Vector3f(3.49f, 7.24f, 5.75f) * 3.f));
 	/*lightSources.push_back(std::make_unique<PointLight>(Eigen::Vector3f(0.f, 0.f, -18.f), Eigen::Vector3f(3.49f, 7.24f, 6.5f) * 2.f));*/
 	// Shuffling the scanline order gets better CPU usage between threads
 	// when some lines take longer to render than others.
@@ -159,7 +159,7 @@ int main(int argc, char* argv[]) {
 			HitInfo hitInfo;
 
 			//fog colour
-			Eigen::Vector3f fogColor = Eigen::Vector3f(4.49f, 7.24f, 6.75f)/9.f;
+			Eigen::Vector3f fogColor = Eigen::Vector3f(4.9f, 6.24f, 6.75f)/9.f;
 			//fog density
 			float fogDensity = 0.025f;
 			//fog distance

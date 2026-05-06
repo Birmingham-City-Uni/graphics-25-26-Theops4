@@ -179,8 +179,11 @@ public:
 		if (surfaceDir.dot(_direction) < _cosAngle) {
 			return Eigen::Vector3f::Zero();
 		}
-		//added softness to the edge of the spotlight, so that it doesn't drop off so suddenly 
-		float softness = std::pow((surfaceDir.dot(_direction) - _cosAngle) / (1.0f - _cosAngle), 2.0f);
+
+		// Soft shadowing
+		// dot product of surface direction and spotlight direction - edge of spotlight / the center of the spotlight ^2 to give smoother falloff
+		// results in a quadratic curve, so that the falloff is more gradual near the edge of the spotlight, and more intense near the center
+		float softness = std::pow((surfaceDir.dot(_direction) - _cosAngle) / (1.0f - _cosAngle), 2.0f); 
 
 		float distance = (_location - surfaceLocation).norm();
 		return (_intensity * softness) / (distance * distance);

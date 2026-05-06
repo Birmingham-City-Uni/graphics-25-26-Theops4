@@ -144,7 +144,7 @@ void drawTriangle(std::vector<uint8_t>& image, int width, int height,
 					// Work out the view direction (from surface point towards camera). Make sure it's normalized!
 					Eigen::Vector3f viewDir = (camWorldPos - worldP).normalized();
 					// Find the specular term by calling phongSpecularTerm.
-					float specularTerm = phongSpecularTerm(incomingLightDir, normP, viewDir, specularExponent);
+					float specularTerm = blinnPhongSpecularTerm(incomingLightDir, normP, viewDir, specularExponent);
 	
 
 					Eigen::Vector3f specularOut = specularColor * specularTerm;
@@ -169,6 +169,24 @@ void drawTriangle(std::vector<uint8_t>& image, int width, int height,
 					color += coeffWiseMultiply(lightIntensity, albedo);
 				}
 			}
+
+			//define fog colour and density
+			Eigen::Vector3f fogColor(0.3f, 0.5f, 0.5f);
+			float fogDensity = 0.03f;
+			float fogStart = 6.0f; // distance at which fog starts
+
+			//work out distance of of pixel from camera
+			float distance = (worldP - camWorldPos).norm();
+
+			//calculate how much fog to apply based on distance
+			float fogDistance = std::max(0.0f, distance - fogStart);
+
+			//calculate fog factor using exponential fog formula
+			float fogfactor = std::exp(-fogDensity * fogDistance);
+			fogfactor = std::max(0.0f, std::min(1.0f, fogfactor));
+
+			//apply fog to color
+			color = fogfactor * color + (1.0f - fogfactor) * fogColor;
 
 			Color c;
 			// Gamma-correcting colours.

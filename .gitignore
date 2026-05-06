@@ -6,6 +6,9 @@
 *.lo
 *.o
 *.obj
+!Coursework/Rasteriser/models/*.obj
+!Coursework/Raytracer/models/*.obj
+
 
 # Precompiled Headers
 *.gch
